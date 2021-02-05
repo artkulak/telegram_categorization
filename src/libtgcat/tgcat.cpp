@@ -1,14 +1,9 @@
 #include "tgcat.hpp"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <fstream>
 #include <sstream>
-#include <cstddef>
 #include <string>
-#include <unordered_map>
-#include <map>
+#include <cstring>
 
 #include "../../resources/fasttext/src/fasttext.h"
 using namespace fasttext;
@@ -16,7 +11,7 @@ using namespace fasttext;
 static FastText ft;
 
 bool fasttext_init() {
-  const auto path = "../../models/lid.176.bin";
+  const auto path = "../../models/language";
   try {
     ft.loadModel(path);
   } catch (const std::exception& ex) {
@@ -27,7 +22,7 @@ bool fasttext_init() {
   return true;
 }
 
-std::string escaped(const std::string& input)
+std::string preprocess(const std::string& input)
 {
   std::string output;
   output.reserve(input.size());
@@ -58,9 +53,9 @@ int tgcat_init() {
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
                           char language_code[6]) {
   std::stringstream ss;
-  ss << escaped(channel_info->title) << escaped(channel_info->description);
+  ss << preprocess(channel_info->title) << preprocess(channel_info->description);
   for (std::size_t i = 0; i < channel_info->post_count; ++i) {
-    ss << escaped(channel_info->posts[i]);
+    ss << preprocess(channel_info->posts[i]);
   }
 
   if (ss) {
