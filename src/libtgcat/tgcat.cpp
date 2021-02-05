@@ -15,7 +15,8 @@ bool fasttext_init() {
   try {
     ft.loadModel(path);
   } catch (const std::exception& ex) {
-    std::cerr << "Exception: " << ex.what() << std::endl;
+    std::cerr << "Exception: Unable to laod model! [" << path << "] "
+              << ex.what() << std::endl;
     return false;
   }
 
