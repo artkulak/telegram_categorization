@@ -35,8 +35,7 @@ The library `libfasttext.so` will be generated in the `build` folder.
 
 ```shell
 cd src/libtgcat
-mkdir build
-cd build
+mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
@@ -52,8 +51,7 @@ located in its `build` folder.
 ```shell
 cd resources/libtgcat-tester
 ln -s ../../src/libtgcat/build/libtgcat.so .
-mkdir build
-cd build
+mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
@@ -74,10 +72,12 @@ $ ./tgcat-tester language ./../../test-data/d1k.txt ./o1k.txt
 Processed 1000 queries in 0.699325 seconds
 ```
 
-You can create symlinks of test files in this directory as well:
+You can create symlink of `test-data` in this directory for a better workflow:
 
 ```shell
-$ ln -s ./../../test-data/d1k.txt .
-$ ./tgcat-tester language ./d1k.txt ./o1k.txt
+$ ln -s ./../../test-data/ .
+$ ./tgcat-tester language ./test-data/d1k.txt ./test-data/o1k.txt
 Processed 1000 queries in 0.699325 seconds
 ```
+
+Now, all the inputs and output will be in the `test-data` folder.
