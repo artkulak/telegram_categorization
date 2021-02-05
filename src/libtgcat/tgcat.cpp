@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <ctime>
 
 #include "../../resources/fasttext/src/fasttext.h"
 using namespace fasttext;
@@ -39,7 +40,7 @@ bool fasttext_init() {
 bool preprocess_init() {
 #ifdef DUMP_PREPROCESSED_DATA
   const auto current_time = std::time(nullptr);
-  const auto prefix = std::string{"preprocessed_"};
+  const auto prefix = "preprocessed_";
   const auto filename = prefix + std::to_string(current_time) + ".txt";
   preprocessed_file.open(filename);
   if (!preprocessed_file.is_open()) {
