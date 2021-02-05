@@ -25,7 +25,6 @@ Also, you can put your test files in `test-data` directory for easy access.
 
 ```shell
 cd resources/fasttext
-mkdir build
 mkdir build && cd build && cmake ..
 make
 ```
