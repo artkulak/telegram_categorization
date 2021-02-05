@@ -16,8 +16,14 @@ telegram_categorization
   - libtgcat            (updated libtgcat source - to be tested with libtgcat-tester)
 ```
 
-Make sure you download and copy `lid.176.bin` in the `resources/models` directory.
-Also, you can put your test files in `test-data` directory for easy access.
+Make sure you download and place `lid.176.bin` in the `resources/models` directory.  
+The `models/language` is a symlink to `lid.176.bin` and is used inside `libtgcat` to
+load the language model for categorization. You can create your own symlink `language`
+under `models` directory to any arbitrary location. This removes the need to compile 
+the library everytime a different model is used.
+
+Also, you can put your test files in `test-data` directory and use its symlink in the
+`libtgcat-tester/build` for testing purposes.
 
 ## Build
 
