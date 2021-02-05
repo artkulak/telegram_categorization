@@ -70,8 +70,14 @@ int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
     std::vector<std::pair<real, std::string>> predictions;
     if (ft.predictLine(ss, predictions, k, threshold) && !predictions.empty()) {
       const auto code = predictions.at(0).second.substr(9); // skip __label__
-      memcpy(language_code, code.c_str(), code.length());
-      return 0;
+      
+      // support only 2-letter language codes
+      // `sh` is not in the Wikipedia ISO 639-1 list so it is not considered
+      if (code.length() == 2 && code != "sh")
+      {
+        memcpy(language_code, code.c_str(), code.length());
+        return 0;
+      }
     }
   }
 
