@@ -8,7 +8,19 @@
 #include "../../resources/fasttext/src/fasttext.h"
 using namespace fasttext;
 
+
+// global instances (not exported)
+
 static FastText ft;
+
+#define DUMP_PREPROCESSED_DATA
+#ifdef DUMP_PREPROCESSED_DATA
+static std::ofstream preprocessed_file;
+#endif
+
+// definitions
+
+// fasttext
 
 bool fasttext_init() {
   const auto path = "../../models/language";
@@ -19,35 +31,57 @@ bool fasttext_init() {
               << ex.what() << std::endl;
     return false;
   }
-
   return true;
 }
 
-std::string preprocess(const std::string& input)
-{
+// preprocess data
+
+bool preprocess_init() {
+#ifdef DUMP_PREPROCESSED_DATA
+  preprocessed_file.open("./preprocessed.txt", std::ios::trunc);
+  if (!preprocessed_file.is_open()) {
+    std::cerr << "ERROR: Failed to create file to dump preprocessed data!" << std::endl;
+    return false;
+  }
+#endif
+  return true;
+}
+
+void preprocess_dump(std::string data) {
+#ifdef DUMP_PREPROCESSED_DATA
+    data += '\n';
+    preprocessed_file.write(data.c_str(), data.size());
+#endif
+}
+
+std::string preprocess(const std::string& input) {
   std::string output;
   output.reserve(input.size());
-  for (const char c : input) {
-    switch (c) {
-      case '\a': output += "\\a"; break;
-      case '\b': output += "\\b"; break;
-      case '\f': output += "\\f"; break;
-      case '\n': output += "\\n"; break;
-      case '\r': output += "\\r"; break;
-      case '\t': output += "\\t"; break;
-      case '\v': output += "\\v"; break;
-      default:   output += c;     break;
+
+  for (char c : input) {
+    if (isdigit(c) || ispunct(c) ||
+        (isspace(c) && c != ' ') ||
+        c == '\a' || c == '\b') {
+      continue;
     }
+
+    if (isupper(c)) {
+      c = tolower(c);
+    }
+
+    output += c;
   }
+
   return output;
 }
 
+// libtgcat
+
 int tgcat_init() {
-  if (!fasttext_init()) {
-    std::cerr << "ERROR: fasttext initialization failed!" << std::endl;
+  if (!fasttext_init() || !preprocess_init()) {
+    std::cerr << "ERROR: Initialization failed!" << std::endl;
     return -1;
   }
-
   return 0;
 }
 
@@ -60,13 +94,15 @@ int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
   }
 
   if (ss) {
+    preprocess_dump(ss.str());
+
     const int32_t k = 1;
     const real threshold = 0.0;
 
     std::vector<std::pair<real, std::string>> predictions;
     if (ft.predictLine(ss, predictions, k, threshold) && !predictions.empty()) {
       const auto code = predictions.at(0).second.substr(9); // skip __label__
-      
+
       // support only 2-letter language codes
       // `sh` is not in the Wikipedia ISO 639-1 list so it is not considered
       if (code.length() == 2 && code != "sh")
