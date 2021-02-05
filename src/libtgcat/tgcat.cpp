@@ -38,9 +38,13 @@ bool fasttext_init() {
 
 bool preprocess_init() {
 #ifdef DUMP_PREPROCESSED_DATA
-  preprocessed_file.open("./preprocessed.txt", std::ios::trunc);
+  const auto current_time = std::time(nullptr);
+  const auto prefix = std::string{"preprocessed_"};
+  const auto filename = prefix + std::to_string(current_time) + ".txt";
+  preprocessed_file.open(filename);
   if (!preprocessed_file.is_open()) {
-    std::cerr << "ERROR: Failed to create file to dump preprocessed data!" << std::endl;
+    std::cerr << "ERROR: Unable to create file to dump preprocessed data! "
+              << filename << std::endl;
     return false;
   }
 #endif
