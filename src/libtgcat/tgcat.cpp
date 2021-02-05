@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring>
 #include <ctime>
+#include <regex>
 
 #include "../../resources/fasttext/src/fasttext.h"
 using namespace fasttext;
@@ -23,7 +24,7 @@ static std::ofstream preprocessed_file;
 
 // fasttext
 
-bool fasttext_init() {
+bool fasttext_init() noexcept {
   const auto path = "../../models/language";
   try {
     ft.loadModel(path);
@@ -37,7 +38,7 @@ bool fasttext_init() {
 
 // preprocess data
 
-bool preprocess_init() {
+bool preprocess_init() noexcept {
 #ifdef DUMP_PREPROCESSED_DATA
   const auto current_time = std::time(nullptr);
   const auto prefix = "preprocessed_";
@@ -52,14 +53,34 @@ bool preprocess_init() {
   return true;
 }
 
-void preprocess_dump(std::string data) {
+static inline
+void preprocess_dump(std::string data) noexcept {
 #ifdef DUMP_PREPROCESSED_DATA
     data += '\n';
     preprocessed_file.write(data.c_str(), data.size());
+    preprocessed_file.flush();
 #endif
 }
 
-std::string preprocess(const std::string& input) {
+static
+std::string preprocess_email_and_username(std::string input) noexcept {
+  static const std::regex re_email{R"re((\w+)(\.|_)?(\w*)@(\w+)(\.(\w+))+)re"};
+  static const std::regex re_username{R"re(@(\w+))re"};
+  input = std::regex_replace(input, re_email, "");
+  input = std::regex_replace(input, re_username, "");
+  return input;
+}
+
+static
+std::string preprocess_trim(std::string input) noexcept {
+  static const std::regex re_whitespace{R"re(^ +| +$|( ) +)re"};
+  return std::regex_replace(input, re_whitespace, "$1");
+}
+
+static
+std::string preprocess(std::string input) noexcept {
+  input = preprocess_email_and_username(input);
+
   std::string output;
   output.reserve(input.size());
 
@@ -69,15 +90,10 @@ std::string preprocess(const std::string& input) {
         c == '\a' || c == '\b') {
       continue;
     }
-
-    if (isupper(c)) {
-      c = tolower(c);
-    }
-
-    output += c;
+    output += isupper(c) ? tolower(c) : c;
   }
 
-  return output;
+  return preprocess_trim(output);
 }
 
 // libtgcat
