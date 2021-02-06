@@ -12,5 +12,5 @@ set_target_properties(fasttext PROPERTIES
     IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/../../resources/fasttext/build/libfasttext.so"
 )
 
-add_library(tgcat SHARED tgcat.cpp)
+add_library(tgcat SHARED tgcat.cpp preprocessor.cpp language_predictor.cpp)
 target_link_libraries(tgcat fasttext)

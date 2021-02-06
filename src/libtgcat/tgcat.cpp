@@ -7,6 +7,8 @@
 #include <ctime>
 #include <regex>
 
+#include "preprocessor.hpp"
+
 #include "../../resources/fasttext/src/fasttext.h"
 using namespace fasttext;
 
@@ -14,11 +16,7 @@ using namespace fasttext;
 // global instances (not exported)
 
 static FastText ft;
-
-#define DUMP_PREPROCESSED_DATA
-#ifdef DUMP_PREPROCESSED_DATA
-static std::ofstream preprocessed_file;
-#endif
+static Preprocessor pp{Preprocessor::Mode::DEBUG};
 
 // definitions
 
@@ -36,70 +34,31 @@ bool fasttext_init() noexcept {
   return true;
 }
 
-// preprocess data
+std::string fasttext_predict(const std::string& data) noexcept {
+  std::istringstream iss{data};
 
-bool preprocess_init() noexcept {
-#ifdef DUMP_PREPROCESSED_DATA
-  const auto current_time = std::time(nullptr);
-  const auto prefix = "preprocessed_";
-  const auto filename = prefix + std::to_string(current_time) + ".txt";
-  preprocessed_file.open(filename);
-  if (!preprocessed_file.is_open()) {
-    std::cerr << "ERROR: Unable to create file to dump preprocessed data! "
-              << filename << std::endl;
-    return false;
-  }
-#endif
-  return true;
-}
+  const int32_t k = 1;
+  const real threshold = 0.0;
 
-static inline
-void preprocess_dump(std::string data) noexcept {
-#ifdef DUMP_PREPROCESSED_DATA
-    data += '\n';
-    preprocessed_file.write(data.c_str(), data.size());
-    preprocessed_file.flush();
-#endif
-}
+  std::vector<std::pair<real, std::string>> predictions;
+  if (ft.predictLine(iss, predictions, k, threshold) && !predictions.empty()) {
+    const auto code = predictions.at(0).second.substr(9); // skip __label__
 
-static
-std::string preprocess_email_and_username(std::string input) noexcept {
-  static const std::regex re_email{R"re((\w+)(\.|_)?(\w*)@(\w+)(\.(\w+))+)re"};
-  static const std::regex re_username{R"re(@(\w+))re"};
-  input = std::regex_replace(input, re_email, "");
-  input = std::regex_replace(input, re_username, "");
-  return input;
-}
-
-static
-std::string preprocess_trim(std::string input) noexcept {
-  static const std::regex re_whitespace{R"re(^ +| +$|( ) +)re"};
-  return std::regex_replace(input, re_whitespace, "$1");
-}
-
-static
-std::string preprocess(std::string input) noexcept {
-  input = preprocess_email_and_username(input);
-
-  std::string output;
-  output.reserve(input.size());
-
-  for (char c : input) {
-    if (isdigit(c) || ispunct(c) ||
-        (isspace(c) && c != ' ') ||
-        c == '\a' || c == '\b') {
-      continue;
+    // support only 2-letter language codes
+    // `sh` is not in the Wikipedia ISO 639-1 list so it is not considered
+    if (code.length() == 2 && code != "sh")
+    {
+      return code;
     }
-    output += isupper(c) ? tolower(c) : c;
   }
 
-  return preprocess_trim(output);
+  return "other";
 }
 
 // libtgcat
 
 int tgcat_init() {
-  if (!fasttext_init() || !preprocess_init()) {
+  if (!fasttext_init()) {
     std::cerr << "ERROR: Initialization failed!" << std::endl;
     return -1;
   }
@@ -108,33 +67,16 @@ int tgcat_init() {
 
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
                           char language_code[6]) {
-  std::stringstream ss;
-  ss << preprocess(channel_info->title) << preprocess(channel_info->description);
+  std::string raw_data{channel_info->title};
+  raw_data += ' ' + std::string{channel_info->description};
   for (std::size_t i = 0; i < channel_info->post_count; ++i) {
-    ss << preprocess(channel_info->posts[i]);
+    raw_data += ' ' + std::string{channel_info->posts[i]};
   }
 
-  if (ss) {
-    preprocess_dump(ss.str());
+  const auto preprocessed_data = pp.preprocess(raw_data);
+  const auto predicted_language_code = fasttext_predict(preprocessed_data);
 
-    const int32_t k = 1;
-    const real threshold = 0.0;
-
-    std::vector<std::pair<real, std::string>> predictions;
-    if (ft.predictLine(ss, predictions, k, threshold) && !predictions.empty()) {
-      const auto code = predictions.at(0).second.substr(9); // skip __label__
-
-      // support only 2-letter language codes
-      // `sh` is not in the Wikipedia ISO 639-1 list so it is not considered
-      if (code.length() == 2 && code != "sh")
-      {
-        memcpy(language_code, code.c_str(), code.length());
-        return 0;
-      }
-    }
-  }
-
-  memcpy(language_code, "other", 6);
+  memcpy(language_code, predicted_language_code.c_str(), predicted_language_code.size());
   return 0;
 }
 

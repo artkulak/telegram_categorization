@@ -1,5 +1,5 @@
-#ifndef TGCAT_H
-#define TGCAT_H
+#ifndef TGCAT_HPP
+#define TGCAT_HPP
 
 /**
  * Library for determining topic and main languange of Telegram channels by
