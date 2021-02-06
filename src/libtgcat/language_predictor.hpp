@@ -13,6 +13,8 @@ public:
 
 private:
     FastText    _ft;
+
+    bool loadModel() noexcept;
 };
 
 #endif // LANGUAGE_PREDICTOR_HPP

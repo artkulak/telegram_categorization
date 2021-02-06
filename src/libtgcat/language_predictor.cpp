@@ -5,12 +5,7 @@
 #include <cstdlib>
 
 LanguagePredictor::LanguagePredictor() noexcept {
-  const auto path = "../../models/language";
-  try {
-    _ft.loadModel(path);
-  } catch (const std::exception& ex) {
-    std::cerr << "Exception: Unable to laod model! [" << path << "] "
-              << ex.what() << std::endl;
+  if (!loadModel()) {
     exit(EXIT_FAILURE);
   }
 }
@@ -37,4 +32,16 @@ std::string LanguagePredictor::predict(const std::string& data) noexcept {
   }
 
   return "other";
+}
+
+bool LanguagePredictor::loadModel() noexcept {
+  const auto path = "../../models/language";
+  try {
+    _ft.loadModel(path);
+  } catch (const std::exception& ex) {
+    std::cerr << "Exception: Unable to laod model! [" << path << "] "
+              << ex.what() << std::endl;
+    return false;
+  }
+  return true;
 }
