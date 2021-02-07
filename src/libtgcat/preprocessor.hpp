@@ -8,7 +8,7 @@ class Preprocessor final {
 public:
   enum class Mode : bool { DEBUG, RELEASE };
 
-  explicit Preprocessor(const Mode mode = Mode::RELEASE) noexcept;
+  explicit Preprocessor(const Mode mode = Mode::RELEASE);
   ~Preprocessor();
 
   std::string preprocess(std::string data) noexcept;
@@ -23,13 +23,13 @@ private:
 
   void dump(std::string data) noexcept;
 
-  std::string preprocess_email(const std::string& s) const noexcept;
-  std::string preprocess_username(const std::string& s) const noexcept;
-  std::string preprocess_links(const std::string& s) const noexcept;
-  std::string preprocess_emojis_deletion(const std::string& s) const noexcept;
-  std::string preprocess_emojis_isolation(const std::string& s) const noexcept;
-  std::string preprocess_emojis(std::string s) const noexcept;
-  std::string preprocess_whitespace(const std::string& s) const noexcept;
+  std::string preprocess_email(const std::string& s) const;
+  std::string preprocess_username(const std::string& s) const;
+  std::string preprocess_links(const std::string& s) const;
+  std::string preprocess_emojis_deletion(const std::string& s) const;
+  std::string preprocess_emojis_isolation(const std::string& s) const;
+  std::string preprocess_emojis(std::string s) const;
+  std::string preprocess_whitespace(const std::string& s) const;
 };
 
 #endif // PREPROCESSOR_HPP

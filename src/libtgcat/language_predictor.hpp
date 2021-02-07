@@ -6,7 +6,7 @@ using namespace fasttext;
 
 class LanguagePredictor final {
 public:
-    LanguagePredictor() noexcept;
+    LanguagePredictor();
     ~LanguagePredictor();
 
     std::string predict(const std::string& data) noexcept;

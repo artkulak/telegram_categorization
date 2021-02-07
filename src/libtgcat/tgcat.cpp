@@ -1,22 +1,20 @@
 #include "tgcat.hpp"
 
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <cstring>
-#include <ctime>
-#include <regex>
+#include <memory>
 
 #include "preprocessor.hpp"
 #include "language_predictor.hpp"
 
 // global instances (not exported)
 
-static Preprocessor pp{Preprocessor::Mode::DEBUG};
-static LanguagePredictor lp;
+static std::unique_ptr<Preprocessor> pp{nullptr};
+static std::unique_ptr<LanguagePredictor> lp{nullptr};
 
 // definitions
 
+static
 std::string get_channel_raw_data(const struct TelegramChannelInfo *channel_info) {
   std::string raw_data{channel_info->title};
   raw_data += ' ' + std::string{channel_info->description};
@@ -29,14 +27,22 @@ std::string get_channel_raw_data(const struct TelegramChannelInfo *channel_info)
 // libtgcat
 
 int tgcat_init() {
+  try {
+    pp = std::make_unique<Preprocessor>(Preprocessor::Mode::DEBUG);
+    lp = std::make_unique<LanguagePredictor>();
+  } catch (const std::exception& ex) {
+    std::cerr << "ERROR: Initialization failed!" << std::endl;
+    return -1;
+  }
+
   return 0;
 }
 
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
                           char language_code[6]) {
   const auto raw_data = get_channel_raw_data(channel_info);
-  const auto preprocessed_data = pp.preprocess(raw_data);
-  const auto predicted_language_code = lp.predict(preprocessed_data);
+  const auto preprocessed_data = pp->preprocess(raw_data);
+  const auto predicted_language_code = lp->predict(preprocessed_data);
 
   memcpy(language_code, predicted_language_code.c_str(), predicted_language_code.size());
   return 0;

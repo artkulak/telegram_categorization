@@ -3,10 +3,11 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <exception>
 
-LanguagePredictor::LanguagePredictor() noexcept {
+LanguagePredictor::LanguagePredictor() {
   if (!loadModel()) {
-    exit(EXIT_FAILURE);
+    throw std::runtime_error{"LanguagePredictor: Initalization failed!"};
   }
 }
 
