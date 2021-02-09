@@ -4,36 +4,29 @@
 #include <cstring>
 #include <memory>
 
+#include "config.hpp"
+#include "cache.hpp"
 #include "preprocessor.hpp"
 #include "predictor.hpp"
 
-// constants
-
-namespace ModelPath {
-static constexpr auto Language = "../../models/language";
-static constexpr auto Category_en = "../../models/category_en";
-static constexpr auto Category_ru = "../../models/category_ru";
-}
-
 // global instances (not exported)
-
-static std::string previous_data;
-static std::string previous_code;
+static Cache cache;
 
 static std::unique_ptr<Preprocessor> pp{nullptr};
 static std::unique_ptr<Predictor> lp{nullptr};
-static std::unique_ptr<Predictor> cp_en{nullptr};
+// static std::unique_ptr<Predictor> cp_en{nullptr};
 static std::unique_ptr<Predictor> cp_ru{nullptr};
 
 // definitions
 
 static
 int init() noexcept {
+  using namespace Config;
   try {
     pp = std::make_unique<Preprocessor>(Preprocessor::Mode::DEBUG);
-    lp = std::make_unique<Predictor>("Language Predictor", ModelPath::Language);
-    // cp_en = std::make_unique<Predictor>("Category Predictor (en)", ModelPath::Category_en);
-    cp_ru = std::make_unique<Predictor>("Category Predictor (ru)", ModelPath::Category_ru);
+    lp = std::make_unique<Predictor>("Language Predictor", Model::Path::Language);
+    // cp_en = std::make_unique<Predictor>("Category Predictor (en)", Model::Path::Category_en);
+    cp_ru = std::make_unique<Predictor>("Category Predictor (ru)", Model::Path::Category_ru);
   } catch (const std::exception& ex) {
     std::cerr << "ERROR: Initialization failed!" << std::endl;
     return -1;
@@ -64,11 +57,61 @@ std::vector<std::pair<real, std::string>> get_category_predictions() noexcept {
   // if (previous_code == "en") {
   //   return cp_en->predict(previous_data);
   // }
-  if (previous_code == "ru") {
-    return cp_ru->predict(previous_data, -1);
+  if (cache.getCode() == "ru") {
+    return cp_ru->predict(cache.getData(), -1);
   }
   return {};
 }
+
+// Use-cases
+
+namespace UseCase__CompleteInfo {
+
+void detect_language(const struct TelegramChannelInfo *channel_info,
+                     char language_code[6]) {
+  const auto data = get_channel_data(channel_info);
+  const auto preprocessed_data = pp->preprocess(data);
+  const auto predictions = lp->predict(data);
+  if (predictions.empty()) {
+    cache.reset();
+    return;
+  }
+
+  const auto [_, label] = predictions.at(0);
+  const auto code = get_valid_code(label);
+  memcpy(language_code, code.c_str(), code.size());
+  cache.set(data, code);
+}
+
+void detect_category(const struct TelegramChannelInfo *channel_info,
+                     double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
+  (void)channel_info;
+  memset(category_probability, 0, sizeof(double) * (TGCAT_CATEGORY_OTHER + 1));
+
+  const auto predictions = get_category_predictions();
+  if (predictions.empty()) {
+    return;
+  }
+
+  double sum = 0.0;
+  for (const auto [probability, _] : predictions) {
+    sum += probability;
+  }
+
+  for (auto [probability, label] : predictions) {
+    if (sum > 1.0) {
+      probability /= sum;
+    }
+    const auto index = std::stoi(label.substr(9)) + 1;
+    category_probability[index] = probability;
+  }
+}
+
+} // UseCase_FullChannelInfo
+
+namespace UseCase__RandomizedPosts {
+
+} // UseCase__RandomizedPosts
 
 // libtgcat
 
@@ -78,46 +121,12 @@ int tgcat_init() {
 
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
                           char language_code[6]) {
-  const auto data = get_channel_data(channel_info);
-  const auto preprocessed_data = pp->preprocess(data);
-  const auto predictions = lp->predict(data);
-  if (!predictions.empty()) {
-    const auto [_, label] = predictions.at(0);
-    const auto code = get_valid_code(label);
-    memcpy(language_code, code.c_str(), code.size());
-
-    // to be used by the category pass
-    // data and code are needed to be generated again
-    // can be avoided by storing them
-    previous_data = data;
-    previous_code = code;
-  } else {
-    previous_data.clear();
-    previous_code.clear();
-  }
+  UseCase__CompleteInfo::detect_language(channel_info, language_code);
   return 0;
 }
 
 int tgcat_detect_category(const struct TelegramChannelInfo *channel_info,
                           double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
-  (void)channel_info;
-  memset(category_probability, 0, sizeof(double) * (TGCAT_CATEGORY_OTHER + 1));
-
-  const auto predictions = get_category_predictions();
-  if (!predictions.empty()) {
-    double sum = 0.0;
-    for (const auto [probability, _] : predictions) {
-      sum += probability;
-    }
-
-    for (auto [probability, label] : predictions) {
-      if (sum > 1.0) {
-        probability /= sum;
-      }
-      const auto index = std::stoi(label.substr(9)) + 1;
-      category_probability[index] = probability;
-    }
-  }
-
+  UseCase__CompleteInfo::detect_category(channel_info, category_probability);
   return 0;
 }
