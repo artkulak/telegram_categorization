@@ -215,4 +215,7 @@ int main(int argc, char **argv) {
   }
 
   printf("Processed %d queries in %.6lf seconds\n", query_count, execution_time);
+
+  fclose(in);
+  fclose(out);
 }
