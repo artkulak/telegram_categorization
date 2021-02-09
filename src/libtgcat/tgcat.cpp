@@ -107,7 +107,7 @@ void detect_category(const struct TelegramChannelInfo *channel_info,
   }
 }
 
-} // UseCase_FullChannelInfo
+} // UseCase__CompleteInfo
 
 namespace UseCase__RandomizedPosts {
 
