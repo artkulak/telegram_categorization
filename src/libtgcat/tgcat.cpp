@@ -48,6 +48,19 @@ void populate_category_probabilites(const std::vector<std::pair<real, std::strin
   }
 }
 
+static
+void detect_category(const TelegramChannelInfo *channel_info,
+                     double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
+  (void)channel_info;
+  memset(category_probability, 0, sizeof(double) * (TGCAT_CATEGORY_OTHER + 1));
+
+  const auto predictions = get_category_predictions();
+  if (!predictions.empty()) {
+    populate_category_probabilites(predictions, category_probability);
+    tg.cache.reset();
+  }
+}
+
 // Use-cases
 
 // ---- Complete ----
@@ -92,19 +105,6 @@ void detect_language(const TelegramChannelInfo *channel_info,
   const auto code = get_valid_language_code(label);
   memcpy(language_code, code.c_str(), code.size());
   tg.cache.set(preprocessed_data, code);
-}
-
-static
-void detect_category(const TelegramChannelInfo *channel_info,
-                     double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
-  (void)channel_info;
-  memset(category_probability, 0, sizeof(double) * (TGCAT_CATEGORY_OTHER + 1));
-
-  const auto predictions = get_category_predictions();
-  if (!predictions.empty()) {
-    populate_category_probabilites(predictions, category_probability);
-    tg.cache.reset();
-  }
 }
 
 } // UseCase__Complete
@@ -173,19 +173,6 @@ void detect_language(const TelegramChannelInfo *channel_info,
   tg.cache.set(preprocessed_data, code);
 }
 
-static
-void detect_category(const TelegramChannelInfo *channel_info,
-                     double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
-  (void)channel_info;
-  memset(category_probability, 0, sizeof(double) * (TGCAT_CATEGORY_OTHER + 1));
-
-  const auto predictions = get_category_predictions();
-  if (!predictions.empty()) {
-    populate_category_probabilites(predictions, category_probability);
-    tg.cache.reset();
-  }
-}
-
 } // UseCase__Randomized
 
 // libtgcat
@@ -206,10 +193,6 @@ int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
 
 int tgcat_detect_category(const struct TelegramChannelInfo *channel_info,
                           double category_probability[TGCAT_CATEGORY_OTHER + 1]) {
-  if (channel_info->post_count < Config::Randomized::posts_threshold) {
-    UseCase__Complete::detect_category(channel_info, category_probability);
-  } else {
-    UseCase__Randomized::detect_category(channel_info, category_probability);
-  }
+  detect_category(channel_info, category_probability);
   return 0;
 }
