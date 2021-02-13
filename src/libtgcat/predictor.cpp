@@ -2,8 +2,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <cstdlib>
-#include <exception>
 
 Predictor::Predictor(const std::string name, const std::string model_path) : _name{name} {
   if (!loadModel(model_path)) {
