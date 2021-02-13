@@ -24,7 +24,7 @@ bool Predictor::loadModel(const std::string& path) noexcept {
     _ft.loadModel(path);
   } catch (const std::exception& ex) {
     std::cerr << _name
-              << " | Exception: Unable to laod model! [" << path << "] "
+              << " | Exception: Unable to load model! [" << path << "] "
               << ex.what() << std::endl;
     return false;
   }
