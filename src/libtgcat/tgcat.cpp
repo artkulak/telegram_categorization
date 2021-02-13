@@ -55,17 +55,24 @@ void populate_category_probabilites(const std::vector<std::pair<real, std::strin
 namespace UseCase__Complete {
 
 static
-std::string get_channel_data(const TelegramChannelInfo *channel_info) noexcept {
+std::string get_channel_data(const TelegramChannelInfo *channel_info,
+                             const bool is_unique = false) noexcept {
   auto data = std::string{channel_info->title};
   data += ' ' + std::string{channel_info->description};
-  std::set<std::string> unique_posts;
   const auto count = channel_info->post_count;
   const auto posts = channel_info->posts;
-  for (std::size_t i = 0; i != count; ++i) {
-    unique_posts.emplace(posts[i]);
-  }
-  for (const auto post : unique_posts) {
-    data += ' ' + post;
+  if (is_unique) {
+    std::set<std::string> unique_posts;
+    for (std::size_t i = 0; i != count; ++i) {
+      unique_posts.emplace(posts[i]);
+    }
+    for (const auto post : unique_posts) {
+      data += ' ' + post;
+    }
+  } else {
+    for (std::size_t i = 0; i != count; ++i) {
+      data += ' ' + std::string{posts[i]};
+    }
   }
   return data;
 }
@@ -107,18 +114,26 @@ void detect_category(const TelegramChannelInfo *channel_info,
 namespace UseCase__Randomized {
 
 static
-std::string get_channel_data(const TelegramChannelInfo *channel_info) noexcept {
+std::string get_channel_data(const TelegramChannelInfo *channel_info,
+                             const bool is_unique = false) noexcept {
   const auto indices = get_random_indices(channel_info->post_count,
                                           Config::Randomized::posts_threshold);
   auto data = std::string{channel_info->title};
   data += ' ' + std::string{channel_info->description};
-  std::set<std::string> unique_posts;
+  const auto count = channel_info->post_count;
   const auto posts = channel_info->posts;
-  for (const auto i : indices) {
-    unique_posts.emplace(posts[i]);
-  }
-  for (const auto post : unique_posts) {
-    data += ' ' + post;
+  if (is_unique) {
+    std::set<std::string> unique_posts;
+    for (const auto i : indices) {
+      unique_posts.emplace(posts[i]);
+    }
+    for (const auto post : unique_posts) {
+      data += ' ' + post;
+    }
+  } else {
+    for (std::size_t i = 0; i != count; ++i) {
+      data += ' ' + std::string{posts[i]};
+    }
   }
   return data;
 }
