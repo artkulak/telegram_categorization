@@ -58,8 +58,14 @@ static
 std::string get_channel_data(const TelegramChannelInfo *channel_info) noexcept {
   auto data = std::string{channel_info->title};
   data += ' ' + std::string{channel_info->description};
-  for (std::size_t i = 0; i < channel_info->post_count; ++i) {
-    data += ' ' + std::string{channel_info->posts[i]};
+  std::set<std::string> unique_posts;
+  const auto count = channel_info->post_count;
+  const auto posts = channel_info->posts;
+  for (std::size_t i = 0; i != count; ++i) {
+    unique_posts.emplace(posts[i]);
+  }
+  for (const auto post : unique_posts) {
+    data += ' ' + post;
   }
   return data;
 }
@@ -106,8 +112,13 @@ std::string get_channel_data(const TelegramChannelInfo *channel_info) noexcept {
                                           Config::Randomized::posts_threshold);
   auto data = std::string{channel_info->title};
   data += ' ' + std::string{channel_info->description};
+  std::set<std::string> unique_posts;
+  const auto posts = channel_info->posts;
   for (const auto i : indices) {
-    data += ' ' + std::string{channel_info->posts[i]};
+    unique_posts.emplace(posts[i]);
+  }
+  for (const auto post : unique_posts) {
+    data += ' ' + post;
   }
   return data;
 }
@@ -165,7 +176,7 @@ void detect_category(const TelegramChannelInfo *channel_info,
 // libtgcat
 
 int tgcat_init() {
-  return (tg.init() ? 0 : -1);
+  return tg.init();
 }
 
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,

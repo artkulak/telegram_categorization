@@ -17,18 +17,18 @@ struct tgcat_manager_s {
   Predictor_t     cp_en{nullptr};
   Predictor_t     cp_ru{nullptr};
 
-  bool init() noexcept {
+  int init() noexcept {
     using namespace Config::Language;
     try {
-      pp = std::make_unique<Preprocessor>(Preprocessor::Mode::DEBUG);
+      pp = std::make_unique<Preprocessor>();
       lp = std::make_unique<Predictor>("Language Predictor", Model::language);
       cp_en = std::make_unique<Predictor>("Category Predictor (en)", Model::category_en);
       cp_ru = std::make_unique<Predictor>("Category Predictor (ru)", Model::category_ru);
     } catch (const std::exception& ex) {
       std::cerr << "ERROR: Initialization failed!" << std::endl;
-      return false;
+      return -1;
     }
-    return true;
+    return 0;
   }
 };
 
