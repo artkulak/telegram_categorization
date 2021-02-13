@@ -4,11 +4,11 @@
 #include <random>
 #include <set>
 
-using RandomNumbers = std::set<std::size_t>;
+using Indices = std::set<std::size_t>;
 
-RandomNumbers get_random_indices(const std::size_t post_count,
-                                 const std::size_t threshold) noexcept {
-  RandomNumbers numbers;
+Indices get_random_indices(const std::size_t post_count,
+                           const std::size_t threshold) noexcept {
+  Indices numbers;
   if (post_count < threshold) {
     for (std::size_t i{0}; i != post_count; ++i) {
       numbers.emplace(i);

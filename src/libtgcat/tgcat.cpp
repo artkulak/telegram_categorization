@@ -1,41 +1,16 @@
 #include "tgcat.hpp"
 
-#include <string>
+#include "tg.hpp"
+#include "utils.hpp"
+
 #include <cstring>
-#include <memory>
 #include <unordered_map>
 #include <utility>
 
-#include "config.hpp"
-#include "cache.hpp"
-#include "utils.hpp"
-#include "preprocessor.hpp"
-#include "predictor.hpp"
-
 // global instances (not exported)
-static Cache cache;
-
-static std::unique_ptr<Preprocessor> pp{nullptr};
-static std::unique_ptr<Predictor> lp{nullptr};
-// static std::unique_ptr<Predictor> cp_en{nullptr};
-static std::unique_ptr<Predictor> cp_ru{nullptr};
+static tgcat_manager_s tg;
 
 // definitions
-
-static
-int init() noexcept {
-  using namespace Config;
-  try {
-    pp = std::make_unique<Preprocessor>();
-    lp = std::make_unique<Predictor>("Language Predictor", Model::Path::language);
-    // cp_en = std::make_unique<Predictor>("Category Predictor (en)", Model::Path::category_en);
-    cp_ru = std::make_unique<Predictor>("Category Predictor (ru)", Model::Path::category_ru);
-  } catch (const std::exception& ex) {
-    std::cerr << "ERROR: Initialization failed!" << std::endl;
-    return -1;
-  }
-  return 0;
-}
 
 static
 std::string get_valid_language_code(std::string code) noexcept {
@@ -47,11 +22,12 @@ std::string get_valid_language_code(std::string code) noexcept {
 
 static
 std::vector<std::pair<real, std::string>> get_category_predictions() noexcept {
-  // if (previous_code == "en") {
-  //   return cp_en->predict(previous_data);
-  // }
-  if (cache.get_code() == "ru") {
-    return cp_ru->predict(cache.get_data(), -1); // get all predictions
+  using namespace Config::Language;
+  if (tg.cache.get_code() == Code::English) {
+    return tg.cp_en->predict(tg.cache.get_data(), -1);
+  }
+  if (tg.cache.get_code() == Code::Russian) {
+    return tg.cp_ru->predict(tg.cache.get_data(), -1);
   }
   return {};
 }
@@ -92,17 +68,17 @@ static
 void detect_language(const TelegramChannelInfo *channel_info,
                      char language_code[6]) {
   const auto data = get_channel_data(channel_info);
-  const auto preprocessed_data = pp->preprocess(data);
-  const auto predictions = lp->predict(preprocessed_data);
+  const auto preprocessed_data = tg.pp->preprocess(data);
+  const auto predictions = tg.lp->predict(preprocessed_data);
   if (predictions.empty()) {
-    cache.reset();
+    tg.cache.reset();
     return;
   }
 
   const auto [_, label] = predictions.at(0);
   const auto code = get_valid_language_code(label);
   memcpy(language_code, code.c_str(), code.size());
-  cache.set(preprocessed_data, code);
+  tg.cache.set(preprocessed_data, code);
 }
 
 static
@@ -114,7 +90,7 @@ void detect_category(const TelegramChannelInfo *channel_info,
   const auto predictions = get_category_predictions();
   if (!predictions.empty()) {
     populate_category_probabilites(predictions, category_probability);
-    cache.reset();
+    tg.cache.reset();
   }
 }
 
@@ -142,8 +118,8 @@ void detect_language(const TelegramChannelInfo *channel_info,
   std::unordered_map<std::string, std::pair<std::string, std::size_t>> lookup_table;
   for (std::size_t i{0}; i != Config::Randomized::no_of_passes; ++i) {
     const auto data = get_channel_data(channel_info);
-    const auto preprocessed_data = pp->preprocess(data);
-    const auto predictions = lp->predict(preprocessed_data);
+    const auto preprocessed_data = tg.pp->preprocess(data);
+    const auto predictions = tg.lp->predict(preprocessed_data);
     if (!predictions.empty()) {
       const auto [_, label] = predictions.at(0);
       const auto code = get_valid_language_code(label);
@@ -168,7 +144,7 @@ void detect_language(const TelegramChannelInfo *channel_info,
   }
 
   memcpy(language_code, code.c_str(), code.size());
-  cache.set(preprocessed_data, code);
+  tg.cache.set(preprocessed_data, code);
 }
 
 static
@@ -180,7 +156,7 @@ void detect_category(const TelegramChannelInfo *channel_info,
   const auto predictions = get_category_predictions();
   if (!predictions.empty()) {
     populate_category_probabilites(predictions, category_probability);
-    cache.reset();
+    tg.cache.reset();
   }
 }
 
@@ -189,7 +165,7 @@ void detect_category(const TelegramChannelInfo *channel_info,
 // libtgcat
 
 int tgcat_init() {
-  return init();
+  return (tg.init() ? 0 : -1);
 }
 
 int tgcat_detect_language(const struct TelegramChannelInfo *channel_info,
