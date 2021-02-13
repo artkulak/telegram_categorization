@@ -20,7 +20,7 @@ struct tgcat_manager_s {
   int init() noexcept {
     using namespace Config::Language;
     try {
-      pp = std::make_unique<Preprocessor>();
+      pp = std::make_unique<Preprocessor>(Preprocessor::Mode::RELEASE);
       lp = std::make_unique<Predictor>("Language Predictor", Model::language);
       cp_en = std::make_unique<Predictor>("Category Predictor (en)", Model::category_en);
       cp_ru = std::make_unique<Predictor>("Category Predictor (ru)", Model::category_ru);
