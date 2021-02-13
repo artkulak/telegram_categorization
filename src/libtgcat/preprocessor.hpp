@@ -29,6 +29,9 @@ private:
   std::string preprocess_emojis_deletion(const std::string& s) const;
   std::string preprocess_emojis_isolation(const std::string& s) const;
   std::string preprocess_emojis(std::string s) const;
+  std::string preprocess_stop_words_en(const std::string& s) const;
+  std::string preprocess_stop_words_ru(const std::string& s) const;
+  std::string preprocess_stop_words(std::string s) const;
   std::string preprocess_whitespace(const std::string& s) const;
 };
 
