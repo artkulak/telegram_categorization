@@ -1,7 +1,7 @@
 #ifndef PREDICTOR_HPP
 #define PREDICTOR_HPP
 
-#include "../../resources/fasttext/src/fasttext.h"
+#include "fasttext.h"
 using namespace fasttext;
 
 class Predictor final {
