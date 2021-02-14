@@ -25,7 +25,7 @@ Preprocessor::~Preprocessor() {
 
 std::string Preprocessor::preprocess(std::string data) noexcept {
   try {
-    data = preprocess_emojis(data);
+    // data = preprocess_emojis(data);
     data = preprocess_email(data);
     data = preprocess_username(data);
     data = preprocess_links(data);
