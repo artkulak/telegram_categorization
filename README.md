@@ -1,11 +1,61 @@
-# telegram_categorization
+# Data Clustering Contest 2021
+The task in this contest was to create a C/C++ library that can determine the language and topic of a Telegram channel.
 
-Code for Telegram categorization library
+## The task
+Determine channel language. The algorithm must use the channel's name, description and the text of several posts to determine its language and return the language's 2-letter ISO code (or “other” if the language doesn’t have a two-letter code).
+
+Determine channel topic. For channels in English and Russian, the algorithm must determine the relative weight for each of the topics identified in the channel. List of possible topics:
+
+- Art & Design
+- Bets & Gambling
+- Books
+- Business & Entrepreneurship
+- Cars & Other Vehicles
+- Celebrities & Lifestyle
+- Cryptocurrencies
+- Culture & Events
+- Curious Facts
+- Directories of Channels & Bots
+- Economy & Finance
+- Education
+- Erotic Content
+- Fashion & Beauty
+- Fitness
+- Food & Cooking
+- Foreign Languages
+- Health & Medicine
+- History
+- Hobbies & Activities
+- Home & Architecture
+- Humor & Memes
+- Investments
+- Job Listings
+- Kids & Parenting
+- Marketing & PR
+- Motivation & Self-Development
+- Movies
+- Music
+- Offers & Promotions
+- Pets
+- Politics & Incidents
+- Psychology & Relationships
+- Real Estate
+- Recreation & Entertainment
+- Religion & Spirituality
+- Science
+- Sports
+- Technology & Internet
+- Travel & Tourism
+- Video Games
+- Other
 
 ## Code Structure
 
 ```text
 telegram_categorization
+- notebooks
+  - training            (contains training jupyter notebooks for the contest)
+  - helper              (contains helper jupyter notebooks for the contest)
 - resources
   - fasttext            (dependency)
   - libtgcat            (existing code)
@@ -24,6 +74,11 @@ the library everytime a different model is used.
 
 Also, you can put your test files in `test-data` directory and use its symlink in the
 `libtgcat-tester/build` for testing purposes.
+
+
+## Models
+
+All trained models are in `submission.zip` branch, the only model which is not there is fasttext language model, it can be downloaded [here](https://fasttext.cc/docs/en/language-identification.html)
 
 ## Build
 
