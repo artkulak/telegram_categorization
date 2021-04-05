@@ -2,11 +2,11 @@
 The task in this contest was to create a C/C++ library that can determine the language and topic of a Telegram channel.
 **Team: Tanned Gull**
 
-**4th place solution**
-[Result](https://contest.com/dc2021-r1/entry1495)
+**4th place solution** <br>
+[See model predictions here](https://contest.com/dc2021-r1/entry1495)
 
 
-* KUDOS to the team members:
+* Team Members:
 	- https://github.com/artkulak
 	- https://github.com/iamAzeem
 
