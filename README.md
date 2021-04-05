@@ -78,7 +78,7 @@ Also, you can put your test files in `test-data` directory and use its symlink i
 
 ## Models
 
-All trained models are in `submission.zip` branch, the only model which is not there is fasttext language model, it can be downloaded [here](https://fasttext.cc/docs/en/language-identification.html)
+All trained models are in `submission.zip` branch, the only model that is not there is the fasttext language model, it can be downloaded [here](https://fasttext.cc/docs/en/language-identification.html)
 
 ## Build
 
