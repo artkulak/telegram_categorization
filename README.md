@@ -1,5 +1,14 @@
 # Data Clustering Contest 2021
 The task in this contest was to create a C/C++ library that can determine the language and topic of a Telegram channel.
+**Team: Tanned Gull**
+
+**4th place solution**
+[Result](https://contest.com/dc2021-r1/entry1495)
+
+
+* KUDOS to the team members:
+	- https://github.com/artkulak
+	- https://github.com/iamAzeem
 
 ## The task
 Determine channel language. The algorithm must use the channel's name, description and the text of several posts to determine its language and return the language's 2-letter ISO code (or “other” if the language doesn’t have a two-letter code).
